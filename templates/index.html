@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Football Commentator</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Alpine.js -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body
+  x-data="{
+    loading: false,
+    videoReady: {{ 'true' if video_url else 'false' }},
+    language: 'english',
+    previewText: 'This is a voice preview.',
+    showPreviewModal: false,
+    previewVoiceSelected: '',
+    voices: {
+      english: ['adam', 'rachel'],
+      romanian: ['bogdan', 'andrei', 'corina'],
+      spanish: ['eva', 'martin']
+    },
+    labels: {
+      adam: 'Adam 🇺🇸',
+      rachel: 'Rachel 🇺🇸',
+      bogdan: 'Bogdan 🇷🇴',
+      andrei: 'Andrei 🇷🇴',
+      corina: 'Corina 🇷🇴',
+      eva: 'Eva 🇪🇸',
+      martin: 'Martin 🇪🇸'
+    }
+  }"
+  class="bg-gray-900 text-white min-h-screen flex items-center justify-center px-4"
+>
+
+  <div class="max-w-xl w-full space-y-6">
+    <h1 class="text-3xl font-bold text-center">⚽ Football Video Commentator</h1>
+
+    <!-- Upload Form -->
+    <form
+      x-show="!loading && !videoReady"
+      x-on:submit="loading = true"
+      action="/process-video"
+      method="post"
+      enctype="multipart/form-data"
+      class="space-y-4 bg-gray-800 p-6 rounded-xl shadow-lg"
+    >
+      <!-- Video Input -->
+      <div>
+        <label class="block text-sm font-medium">Select Video</label>
+        <input
+          type="file"
+          name="video"
+          required
+          class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded px-3 py-2"
+        />
+      </div>
+
+      <!-- Language Select -->
+      <div>
+        <label class="block text-sm font-medium">Language</label>
+        <select
+          name="language"
+          x-model="language"
+          class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded px-3 py-2"
+        >
+          <option value="english">English</option>
+          <option value="romanian">Romanian</option>
+          <option value="spanish">Spanish</option>
+        </select>
+      </div>
+
+      <!-- Voice Selectors -->
+      <div class="flex space-x-4">
+        <div class="flex-1">
+          <label class="block text-sm font-medium">Voice 1</label>
+          <select name="voice1" id="voice1"
+                  class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded px-3 py-2">
+            <template x-for="voice in voices[language]" :key="voice">
+              <option :value="voice" x-text="labels[voice]"></option>
+            </template>
+          </select>
+        </div>
+
+        <div class="flex-1">
+          <label class="block text-sm font-medium">Voice 2</label>
+          <select name="voice2" id="voice2"
+                  class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded px-3 py-2">
+            <template x-for="voice in voices[language]" :key="voice">
+              <option :value="voice" x-text="labels[voice]"></option>
+            </template>
+          </select>
+        </div>
+      </div>
+
+      <!-- Open Preview Modal -->
+      <div class="text-right mt-2">
+        <button type="button"
+                class="text-sm text-indigo-300 hover:underline"
+                x-on:click="showPreviewModal = true">
+          🔊 Open Voice Preview
+        </button>
+      </div>
+
+      <!-- Debug Mode -->
+      <div class="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          name="debug"
+          value="true"
+          id="debug"
+          class="text-indigo-500 bg-gray-700 border border-gray-600 rounded"
+        />
+        <label for="debug" class="text-sm">Enable debug mode</label>
+      </div>
+
+      <!-- Submit -->
+      <button
+        type="submit"
+        x-bind:disabled="loading"
+        class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2 px-4 rounded disabled:opacity-50"
+      >
+        Submit
+      </button>
+    </form>
+
+    <!-- Loading -->
+    <div
+      x-show="loading"
+      class="text-center mt-4 text-yellow-400 text-lg font-semibold"
+    >
+      ⏳ Processing video... please wait...
+    </div>
+
+    <!-- Video Output -->
+    {% if video_url %}
+    <div
+      x-init="videoReady = true"
+      x-show="!loading && videoReady"
+      class="bg-gray-800 p-4 rounded-xl shadow transition-opacity duration-500"
+    >
+      <h2 class="text-xl font-semibold mb-2">📽️ Your Commentated Video</h2>
+      <video
+        controls
+        width="100%"
+        class="rounded shadow-lg border border-gray-700"
+      >
+        <source src="{{ video_url }}" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+      <a
+        href="{{ video_url }}"
+        download
+        class="mt-3 block text-center text-indigo-400 hover:underline"
+        >⬇️ Download Video</a
+      >
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Preview Modal -->
+  <div x-show="showPreviewModal"
+       x-transition
+       class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50"
+       x-on:keydown.escape.window="showPreviewModal = false">
+    <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md space-y-4 shadow-lg">
+      <h2 class="text-lg font-semibold text-white">🎤 Voice Preview</h2>
+
+      <div>
+        <label class="block text-sm">Select Voice</label>
+        <select x-model="previewVoiceSelected"
+                class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded px-3 py-2">
+          <template x-for="voice in voices[language]" :key="voice">
+            <option :value="voice" x-text="labels[voice]"></option>
+          </template>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm">Preview Text</label>
+        <input type="text" x-model="previewText"
+               class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded px-3 py-2"
+               placeholder="Type something..." />
+      </div>
+
+      <div class="flex justify-end space-x-3">
+        <button type="button"
+                class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-500"
+                x-on:click="previewVoice(previewVoiceSelected, previewText)">
+          ▶️ Play Preview
+        </button>
+        <button type="button"
+                class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-500"
+                x-on:click="showPreviewModal = false">
+          ✖️ Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JS for preview voice -->
+  <script>
+    function previewVoice(voiceName, previewText) {
+      fetch("/preview-voice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ voice: voiceName, text: previewText }),
+      })
+        .then((response) => {
+          if (!response.ok) throw new Error("Voice preview failed");
+          return response.blob();
+        })
+        .then((blob) => {
+          const audioUrl = URL.createObjectURL(blob);
+          const audio = new Audio(audioUrl);
+          audio.play();
+        })
+        .catch((error) => {
+          alert("⚠️ Error previewing voice: " + error.message);
+        });
+    }
+  </script>
+</body>
+</html>
