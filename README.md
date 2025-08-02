@@ -1,4 +1,4 @@
-# 🎙️ AutoCommentator: AI Football Match Commentary Generator
+#AutoCommentator: AI Football Match Commentary Generator
 
 This project is a prototype system for **automatic generation of football match commentary** using computer vision, natural language generation, and speech synthesis. It analyzes football videos, detects key events, and produces realistic audio commentary in real time.
 
